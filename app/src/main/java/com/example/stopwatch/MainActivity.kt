@@ -29,26 +29,32 @@ class MainActivity : AppCompatActivity() {
     // can do this for the rest of the lifecycle functions (or any
     // function that exists in the superclass)
     override fun onStart() {
+        Log.d(TAG, "onStart: this is starting")
         super.onStart()
     }
 
     override fun onResume() {
+        Log.d(TAG, "onResume: this is resuming")
         super.onResume()
     }
 
     override fun onPause() {
+        Log.d(TAG, "onPause: this is pausing")
         super.onPause()
     }
 
     override fun onStop() {
+        Log.d(TAG, "onStop: this is stopping")
         super.onStop()
     }
 
     override fun onRestart() {
+        Log.d(TAG, "onResume: this is restarting")
         super.onRestart()
     }
 
     override fun onDestroy() {
+        Log.d(TAG, "onDestroy: this is destroying")
         super.onDestroy()
     }
 
