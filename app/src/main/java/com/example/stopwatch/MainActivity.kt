@@ -2,6 +2,7 @@ package com.example.stopwatch
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.PersistableBundle
 import android.os.SystemClock
 import android.text.style.TabStopSpan
 import android.util.Log
@@ -13,45 +14,77 @@ class MainActivity : AppCompatActivity() {
     lateinit var start: Button
     lateinit var reset: Button
     lateinit var chronometer: Chronometer
+    var working = false
+    var timeWhenStopped = 0
+    var displayTime = 0L
 
     // public static final String PI = 3.14     declaring a class-wide constant in java
     // in kotlin, we use a companion object
     companion object {
         // TAG is the default var name for labeling your log statements
         val TAG = "MainActivity"
-        // just for github testing purposes
-        val ASTROPHYSICISTS_PI = 3
+
+        // make constants for your key-value pairs
+        val STATE_DISPLAY_TIME = "Display Time"
+        val STATE_RUNNING = "Running"
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         Log.d(TAG, "onCreate: this is a log")
 
-
-        var timeWhenStopped = 0
         widgets()
+        //restore the saveInstanceState is it exists
+        if (savedInstanceState != null) {
+            displayTime = savedInstanceState.getLong(STATE_DISPLAY_TIME)
+            // solve for base:
+            // base = elapsedTime - displayTime
+            chronometer.base = SystemClock.elapsedRealtime() - displayTime
+        }
+
+        if (savedInstanceState != null) {
+            if (savedInstanceState.getBoolean(STATE_RUNNING)) {
+                working = savedInstanceState.getBoolean(STATE_RUNNING)
+                chronometer.start()
+                start.text = "Stop"
+            }
+        }
 
         start.setOnClickListener {
             if (start.text == "Start") {
                 start.text = "Stop"
-                chronometer.setBase(SystemClock.elapsedRealtime() + timeWhenStopped);
-                chronometer.start();
-            }
-            else {
+                chronometer.base = (SystemClock.elapsedRealtime() + timeWhenStopped)
+                working = true
+                chronometer.start()
+            } else {
                 start.text = "Start"
                 timeWhenStopped = ((chronometer.base - SystemClock.elapsedRealtime()).toInt())
-                chronometer.setBase(SystemClock.elapsedRealtime() + timeWhenStopped);
-                chronometer.stop();
+                chronometer.base = (SystemClock.elapsedRealtime() + timeWhenStopped)
+                working = false
+                chronometer.stop()
             }
         }
-
         reset.setOnClickListener {
             start.text = "Start"
             chronometer.base = SystemClock.elapsedRealtime()
             timeWhenStopped = 0
             chronometer.stop()
+            working = false
         }
+    }
 
+    // use this to preserve state through orientation changes
+    override fun onSaveInstanceState(outState: Bundle) {
+        // figure out the time that is currently displayed on the screen
+        // and save that in a key-value pair in the bundle
+        if (working) {
+            displayTime = SystemClock.elapsedRealtime() - chronometer.base
+        }
+        outState.putLong(STATE_DISPLAY_TIME, displayTime)
+        super.onSaveInstanceState(outState)
+
+        outState.putBoolean(STATE_RUNNING, working)
+        super.onSaveInstanceState(outState)
     }
 
     // to override an existing function, just start typing it
