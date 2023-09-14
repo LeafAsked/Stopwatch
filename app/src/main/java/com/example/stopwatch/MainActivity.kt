@@ -8,6 +8,7 @@ import android.text.style.TabStopSpan
 import android.util.Log
 import android.widget.Button
 import android.widget.Chronometer
+import kotlin.math.abs
 
 class MainActivity : AppCompatActivity() {
 
@@ -15,7 +16,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var reset: Button
     lateinit var chronometer: Chronometer
     var working = false
-    var timeWhenStopped = 0
+    var timeWhenStopped = 0L
     var displayTime = 0L
 
     // public static final String PI = 3.14     declaring a class-wide constant in java
@@ -39,35 +40,36 @@ class MainActivity : AppCompatActivity() {
             displayTime = savedInstanceState.getLong(STATE_DISPLAY_TIME)
             // solve for base:
             // base = elapsedTime - displayTime
-            chronometer.base = SystemClock.elapsedRealtime() - displayTime
-        }
+            chronometer.base = SystemClock.elapsedRealtime() - abs(displayTime)
+            working = savedInstanceState.getBoolean(STATE_RUNNING)
 
-        if (savedInstanceState != null) {
-            if (savedInstanceState.getBoolean(STATE_RUNNING)) {
-                working = savedInstanceState.getBoolean(STATE_RUNNING)
+            if (working) {
                 chronometer.start()
                 start.text = "Stop"
+            }
+            else {
+                chronometer.stop()
+                start.text = "Start"
             }
         }
 
         start.setOnClickListener {
             if (start.text == "Start") {
                 start.text = "Stop"
-                chronometer.base = (SystemClock.elapsedRealtime() + timeWhenStopped)
+                chronometer.base = (SystemClock.elapsedRealtime() + displayTime)
                 working = true
                 chronometer.start()
             } else {
                 start.text = "Start"
-                timeWhenStopped = ((chronometer.base - SystemClock.elapsedRealtime()).toInt())
-                chronometer.base = (SystemClock.elapsedRealtime() + timeWhenStopped)
                 working = false
                 chronometer.stop()
+                displayTime = ((chronometer.base - SystemClock.elapsedRealtime()))
             }
         }
         reset.setOnClickListener {
             start.text = "Start"
             chronometer.base = SystemClock.elapsedRealtime()
-            timeWhenStopped = 0
+            displayTime = 0
             chronometer.stop()
             working = false
         }
@@ -81,8 +83,6 @@ class MainActivity : AppCompatActivity() {
             displayTime = SystemClock.elapsedRealtime() - chronometer.base
         }
         outState.putLong(STATE_DISPLAY_TIME, displayTime)
-        super.onSaveInstanceState(outState)
-
         outState.putBoolean(STATE_RUNNING, working)
         super.onSaveInstanceState(outState)
     }
